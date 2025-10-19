@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Optimizer Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        .svg-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+        }
+        .svg-container h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .stats {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            border-left: 4px solid #3498db;
+        }
+        .stats strong {
+            color: #2c3e50;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .download-btn {
+            background: #27ae60;
+        }
+        .download-btn:hover {
+            background: #229954;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .highlight {
+            background: #f39c12;
+            color: #2c3e50;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🚀 SVG QR Code Optimizer Demo</h1>
+        <p>This demo shows how the SVG optimizer converts hundreds of <code>&lt;rect&gt;</code> elements into a single optimized <code>&lt;path&gt;</code> element.</p>
+        
+        <div>
+            <button onclick="generateDemo()">Generate Demo QR Code</button>
+            <button onclick="runOptimizationTest()">Run Optimization Test</button>
+        </div>
+
+        <div id="results" style="display: none;">
+            <h2>📊 Optimization Results</h2>
+            <div id="stats-container"></div>
+            
+            <div class="comparison">
+                <div class="svg-container">
+                    <h3>Original SVG (Multiple &lt;rect&gt; elements)</h3>
+                    <div id="original-svg"></div>
+                    <button class="download-btn" onclick="downloadOriginal()">Download Original</button>
+                </div>
+                
+                <div class="svg-container">
+                    <h3>Optimized SVG (Single &lt;path&gt; element)</h3>
+                    <div id="optimized-svg"></div>
+                    <button class="download-btn" onclick="downloadOptimized()">Download Optimized</button>
+                </div>
+            </div>
+
+            <h3>📝 Code Comparison</h3>
+            <div>
+                <h4>Original SVG Structure (Excerpt):</h4>
+                <div class="code-block" id="original-code"></div>
+                
+                <h4>Optimized SVG Structure:</h4>
+                <div class="code-block" id="optimized-code"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include ZXing library -->
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    
+    <script type="module">
+        import { optimizeSVG, getOptimizationStats, validateOptimization } from './assets/js/modules/svgOptimizer.js';
+        
+        let originalSVG = '';
+        let optimizedSVG = '';
+        
+        // Make functions available globally for demo
+        window.generateDemo = function() {
+            generateDemoQRCode();
+        };
+        
+        window.runOptimizationTest = function() {
+            runComprehensiveTest();
+        };
+        
+        window.downloadOriginal = function() {
+            downloadSVG(originalSVG, 'qr-original');
+        };
+        
+        window.downloadOptimized = function() {
+            downloadSVG(optimizedSVG, 'qr-optimized');
+        };
+
+        function generateDemoQRCode() {
+            const testData = 'https://github.com/ArinGitPort/QRCodeGeneratorZX - This is a test QR code for demonstrating SVG optimization!';
+            
+            // Wait for ZXing to load
+            const checkZXing = setInterval(() => {
+                if (typeof ZXing !== 'undefined') {
+                    clearInterval(checkZXing);
+                    
+                    try {
+                        // Generate basic SVG with many rect elements
+                        originalSVG = generateBasicSVG(testData, 400);
+                        
+                        // Optimize the SVG
+                        optimizedSVG = optimizeSVG(originalSVG);
+                        
+                        // Validate optimization
+                        const isValid = validateOptimization(originalSVG, optimizedSVG);
+                        
+                        // Get statistics
+                        const stats = getOptimizationStats(originalSVG, optimizedSVG);
+                        
+                        // Display results
+                        displayResults(stats, isValid);
+                        
+                    } catch (error) {
+                        console.error('Demo generation failed:', error);
+                        alert('Demo generation failed. Please check the console for details.');
+                    }
+                }
+            }, 100);
+        }
+
+        function generateBasicSVG(data, size) {
+            const hints = new Map();
+            if (ZXing.EncodeHintType && ZXing.ErrorCorrectionLevel) {
+                hints.set(ZXing.EncodeHintType.ERROR_CORRECTION, ZXing.ErrorCorrectionLevel.M);
+            }
+            
+            const writer = new ZXing.QRCodeWriter();
+            const bitMatrix = writer.encode(data, ZXing.BarcodeFormat.QR_CODE, size, size, hints);
+            
+            const moduleSize = size / bitMatrix.getWidth();
+            const modules = [];
+            
+            // Generate individual rect elements (unoptimized)
+            for (let x = 0; x < bitMatrix.getWidth(); x++) {
+                for (let y = 0; y < bitMatrix.getHeight(); y++) {
+                    if (bitMatrix.get(x, y)) {
+                        modules.push(`<rect x="${x * moduleSize}" y="${y * moduleSize}" width="${moduleSize}" height="${moduleSize}" fill="#000000"/>`);
+                    }
+                }
+            }
+            
+            return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${size}" height="${size}" fill="#ffffff"/>
+  ${modules.join('\n  ')}
+</svg>`;
+        }
+
+        function displayResults(stats, isValid) {
+            document.getElementById('results').style.display = 'block';
+            
+            // Display statistics
+            const statsHtml = `
+                <div class="stats">
+                    <strong>📈 Optimization Statistics:</strong><br>
+                    Original Size: <span class="highlight">${(stats.originalSize / 1024).toFixed(1)} KB</span><br>
+                    Optimized Size: <span class="highlight">${(stats.optimizedSize / 1024).toFixed(1)} KB</span><br>
+                    Size Reduction: <span class="highlight">${stats.reductionPercent}%</span><br>
+                    Elements: <span class="highlight">${stats.originalElements} → ${stats.optimizedElements}</span><br>
+                    Validation: <span class="highlight">${isValid ? '✅ Passed' : '❌ Failed'}</span>
+                </div>
+            `;
+            document.getElementById('stats-container').innerHTML = statsHtml;
+            
+            // Display SVG previews
+            document.getElementById('original-svg').innerHTML = originalSVG;
+            document.getElementById('optimized-svg').innerHTML = optimizedSVG;
+            
+            // Display code excerpts
+            const originalExcerpt = originalSVG.split('\n').slice(0, 10).join('\n') + '\n  ... (' + (stats.originalElements - 2) + ' more rect elements) ...\n</svg>';
+            const optimizedExcerpt = optimizedSVG;
+            
+            document.getElementById('original-code').textContent = originalExcerpt;
+            document.getElementById('optimized-code').textContent = optimizedExcerpt;
+        }
+
+        function runComprehensiveTest() {
+            console.log('🧪 Running comprehensive optimization tests...');
+            
+            const testCases = [
+                'Hello World!',
+                'https://example.com',
+                'WIFI:T:WPA;S:MyNetwork;P:password123;;',
+                'mailto:test@example.com?subject=Hello&body=Test message',
+                'This is a longer text string to test optimization with more complex QR codes that have many modules.'
+            ];
+            
+            testCases.forEach((testData, index) => {
+                try {
+                    const original = generateBasicSVG(testData, 300);
+                    const optimized = optimizeSVG(original);
+                    const stats = getOptimizationStats(original, optimized);
+                    const isValid = validateOptimization(original, optimized);
+                    
+                    console.log(`Test ${index + 1}:`, {
+                        data: testData.substring(0, 50) + (testData.length > 50 ? '...' : ''),
+                        reduction: `${stats.reductionPercent}%`,
+                        elements: `${stats.originalElements} → ${stats.optimizedElements}`,
+                        valid: isValid
+                    });
+                    
+                } catch (error) {
+                    console.error(`Test ${index + 1} failed:`, error);
+                }
+            });
+            
+            console.log('✅ Comprehensive testing complete!');
+        }
+
+        function downloadSVG(svgContent, filename) {
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `${filename}.svg`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+    </script>
+</body>
+</html>

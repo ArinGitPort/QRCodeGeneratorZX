@@ -441,18 +441,38 @@ header p {
     transform: translateY(0);
 }
 
-.download-btn {
-    background: #27ae60;
-    color: white;
+/* Download Buttons Container */
+.download-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 20px;
-    border: 2px solid #27ae60;
 }
 
-.download-btn:hover {
+.download-png {
+    background: #27ae60;
+    border: 2px solid #27ae60;
+    color: white;
+}
+
+.download-png:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3);
     background: #229954;
     border-color: #229954;
+}
+
+.download-svg {
+    background: #9b59b6;
+    border: 2px solid #9b59b6;
+    color: white;
+}
+
+.download-svg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(155, 89, 182, 0.3);
+    background: #8e44ad;
+    border-color: #8e44ad;
 }
 
 /* QR Code Display */

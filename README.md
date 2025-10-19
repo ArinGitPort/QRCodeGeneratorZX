@@ -1,6 +1,6 @@
 # QR Code Generator ZX
 
-##Made this for personal use.
+## Made this for personal use.
 
 A powerful, customizable QR code generator web application powered by the ZXing ("Zebra Crossing") open-source library from Google. Features a modular architecture for maintainability and supports both PNG and SVG export formats.
 

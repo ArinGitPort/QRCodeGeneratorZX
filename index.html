@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generate customizable QR codes for URLs, text, email, phone, WiFi, and social media using ZXing open-source library">
+    <meta name="keywords" content="qr code generator, zxing, barcode, qr, generator, free, online">
+    <title>QR Code Generator ZX</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23667eea'/%3E%3Crect x='10' y='10' width='25' height='25' fill='white'/%3E%3Crect x='65' y='10' width='25' height='25' fill='white'/%3E%3Crect x='10' y='65' width='25' height='25' fill='white'/%3E%3Crect x='15' y='15' width='15' height='15' fill='%23667eea'/%3E%3Crect x='70' y='15' width='15' height='15' fill='%23667eea'/%3E%3Crect x='15' y='70' width='15' height='15' fill='%23667eea'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-qrcode"></i> QR Code Generator ZX</h1>
+            <p>Generate customizable QR codes using ZXing open-source library</p>
+        </header>
+
+        <main>
+            <div class="generator-section">
+                <div class="input-section">
+                    <h2>Select QR Code Type</h2>
+                    
+                    <div class="type-selector">
+                        <button class="type-btn active" data-type="url">
+                            <i class="fas fa-link"></i>
+                            URL
+                        </button>
+                        <button class="type-btn" data-type="text">
+                            <i class="fas fa-font"></i>
+                            Text
+                        </button>
+                        <button class="type-btn" data-type="email">
+                            <i class="fas fa-envelope"></i>
+                            Email
+                        </button>
+                        <button class="type-btn" data-type="phone">
+                            <i class="fas fa-phone"></i>
+                            Phone
+                        </button>
+                        <button class="type-btn" data-type="sms">
+                            <i class="fas fa-sms"></i>
+                            SMS
+                        </button>
+                        <button class="type-btn" data-type="wifi">
+                            <i class="fas fa-wifi"></i>
+                            WiFi
+                        </button>
+                        <button class="type-btn" data-type="vcard">
+                            <i class="fas fa-address-card"></i>
+                            vCard
+                        </button>
+                        <button class="type-btn" data-type="social">
+                            <i class="fab fa-facebook"></i>
+                            Social
+                        </button>
+                    </div>
+
+                    <!-- URL Input -->
+                    <div class="input-group" id="url-input">
+                        <label for="url">Enter URL:</label>
+                        <input type="url" id="url" placeholder="https://example.com">
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="input-group hidden" id="text-input">
+                        <label for="text">Enter Text:</label>
+                        <textarea id="text" placeholder="Enter your text here..."></textarea>
+                    </div>
+
+                    <!-- Email Input -->
+                    <div class="input-group hidden" id="email-input">
+                        <label for="email">Email Address:</label>
+                        <input type="email" id="email" placeholder="example@email.com">
+                        <label for="email-subject">Subject (optional):</label>
+                        <input type="text" id="email-subject" placeholder="Email subject">
+                        <label for="email-body">Body (optional):</label>
+                        <textarea id="email-body" placeholder="Email body"></textarea>
+                    </div>
+
+                    <!-- Phone Input -->
+                    <div class="input-group hidden" id="phone-input">
+                        <label for="phone">Phone Number:</label>
+                        <input type="tel" id="phone" placeholder="+1234567890">
+                    </div>
+
+                    <!-- SMS Input -->
+                    <div class="input-group hidden" id="sms-input">
+                        <label for="sms-number">Phone Number:</label>
+                        <input type="tel" id="sms-number" placeholder="+1234567890">
+                        <label for="sms-message">Message:</label>
+                        <textarea id="sms-message" placeholder="SMS message"></textarea>
+                    </div>
+
+                    <!-- WiFi Input -->
+                    <div class="input-group hidden" id="wifi-input">
+                        <label for="wifi-ssid">Network Name (SSID):</label>
+                        <input type="text" id="wifi-ssid" placeholder="WiFi Network Name">
+                        <label for="wifi-password">Password:</label>
+                        <input type="password" id="wifi-password" placeholder="WiFi Password">
+                        <label for="wifi-security">Security Type:</label>
+                        <select id="wifi-security">
+                            <option value="WPA">WPA/WPA2</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">Open (No Password)</option>
+                        </select>
+                        <label>
+                            <input type="checkbox" id="wifi-hidden"> Hidden Network
+                        </label>
+                    </div>
+
+                    <!-- vCard Input -->
+                    <div class="input-group hidden" id="vcard-input">
+                        <label for="vcard-name">Full Name:</label>
+                        <input type="text" id="vcard-name" placeholder="John Doe">
+                        <label for="vcard-org">Organization:</label>
+                        <input type="text" id="vcard-org" placeholder="Company Name">
+                        <label for="vcard-phone">Phone:</label>
+                        <input type="tel" id="vcard-phone" placeholder="+1234567890">
+                        <label for="vcard-email">Email:</label>
+                        <input type="email" id="vcard-email" placeholder="john@example.com">
+                        <label for="vcard-url">Website:</label>
+                        <input type="url" id="vcard-url" placeholder="https://example.com">
+                    </div>
+
+                    <!-- Social Media Input -->
+                    <div class="input-group hidden" id="social-input">
+                        <label for="social-platform">Platform:</label>
+                        <select id="social-platform">
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="tiktok">TikTok</option>
+                        </select>
+                        <label for="social-username">Username/Profile:</label>
+                        <input type="text" id="social-username" placeholder="username">
+                    </div>
+
+                    <h3>Customization Options</h3>
+                    
+                    <!-- Size & Dimensions -->
+                    <div class="customization-category">
+                        <h4><i class="fas fa-expand-arrows-alt"></i> Size & Dimensions</h4>
+                        <div class="category-controls">
+                            <div class="custom-option">
+                                <label for="size">QR Code Size (px):</label>
+                                <div class="size-control">
+                                    <input type="range" id="size" min="100" max="800" value="300" step="10">
+                                    <input type="number" id="size-input" min="100" max="800" value="300" step="10">
+                                </div>
+                            </div>
+
+                            <div class="custom-option">
+                                <label for="margin">Border Spacing:</label>
+                                <div class="margin-control">
+                                    <input type="range" id="margin" min="0" max="10" value="4">
+                                    <span id="margin-value">4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colors & Appearance -->
+                    <div class="customization-category">
+                        <h4><i class="fas fa-palette"></i> Colors & Appearance</h4>
+                        <div class="category-controls">
+                            <div class="custom-option">
+                                <label for="foreground-color">QR Code Color:</label>
+                                <input type="color" id="foreground-color" value="#000000">
+                            </div>
+
+                            <div class="custom-option">
+                                <label for="background-color">Background Color:</label>
+                                <input type="color" id="background-color" value="#FFFFFF">
+                            </div>
+
+                            <div class="custom-option">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="transparent-bg"> 
+                                    <span>Transparent Background</span>
+                                </label>
+                                <small class="help-text">Perfect for overlaying on images</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="generate-btn" class="generate-btn">
+                        <i class="fas fa-magic"></i> Generate QR Code
+                    </button>
+                </div>
+
+                <div class="output-section">
+                    <h2>Generated QR Code</h2>
+                    <div class="qr-container">
+                        <div id="qr-code-display">
+                            <div class="placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>Your QR code will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="download-section hidden" id="download-section">
+                        <button id="download-btn" class="download-btn">
+                            <i class="fas fa-download"></i> Download PNG
+                        </button>
+                        <div class="qr-info">
+                            <p><strong>Data:</strong> <span id="qr-data"></span></p>
+                            <p><strong>Size:</strong> <span id="qr-size"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by <a href="https://github.com/zxing-js/library" target="_blank">ZXing-js</a> open-source library</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

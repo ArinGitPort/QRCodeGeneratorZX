@@ -1,0 +1,34 @@
+{
+  "name": "qrcode-generator-zx",
+  "version": "1.0.0",
+  "description": "A powerful, customizable QR code generator web application powered by ZXing library",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx http-server -p 8000",
+    "dev": "npx live-server --port=8000"
+  },
+  "keywords": [
+    "qr-code",
+    "generator",
+    "zxing",
+    "barcode",
+    "javascript",
+    "web-app"
+  ],
+  "author": "ArinGitPort",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArinGitPort/QRCodeGeneratorZX.git"
+  },
+  "homepage": "https://aringitport.github.io/QRCodeGeneratorZX/",
+  "bugs": {
+    "url": "https://github.com/ArinGitPort/QRCodeGeneratorZX/issues"
+  }
+}

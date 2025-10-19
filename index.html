@@ -7,7 +7,7 @@
     <meta name="keywords" content="qr code generator, zxing, barcode, qr, generator, free, online">
     <title>QR Code Generator ZX</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23667eea'/%3E%3Crect x='10' y='10' width='25' height='25' fill='white'/%3E%3Crect x='65' y='10' width='25' height='25' fill='white'/%3E%3Crect x='10' y='65' width='25' height='25' fill='white'/%3E%3Crect x='15' y='15' width='15' height='15' fill='%23667eea'/%3E%3Crect x='70' y='15' width='15' height='15' fill='%23667eea'/%3E%3Crect x='15' y='70' width='15' height='15' fill='%23667eea'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -205,9 +205,14 @@
                     </div>
                     
                     <div class="download-section hidden" id="download-section">
-                        <button id="download-btn" class="download-btn">
-                            <i class="fas fa-download"></i> Download PNG
-                        </button>
+                        <div class="download-buttons">
+                            <button id="download-png-btn" class="download-btn download-png">
+                                <i class="fas fa-download"></i> Download PNG
+                            </button>
+                            <button id="download-svg-btn" class="download-btn download-svg">
+                                <i class="fas fa-vector-square"></i> Download SVG
+                            </button>
+                        </div>
                         <div class="qr-info">
                             <p><strong>Data:</strong> <span id="qr-data"></span></p>
                             <p><strong>Size:</strong> <span id="qr-size"></span></p>
@@ -223,6 +228,6 @@
     </div>
 
     <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>

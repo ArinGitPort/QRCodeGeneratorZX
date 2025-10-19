@@ -1,7 +1,7 @@
 {
   "name": "qrcode-generator-zx",
-  "version": "1.0.0",
-  "description": "A powerful, customizable QR code generator web application powered by ZXing library",
+  "version": "2.0.0",
+  "description": "A powerful, customizable QR code generator with advanced lightweight SVG optimization methods - path optimization and PNG-in-SVG hybrid approach for professional design workflows",
   "main": "index.html",
   "scripts": {
     "start": "python -m http.server 8000",

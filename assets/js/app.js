@@ -106,7 +106,7 @@ export class QRCodeGeneratorApp {
                 this.currentSVG = svgResult;
                 
                 if (shouldUseRowOptimize) {
-                    console.log('💡 Generated row-optimized SVG (horizontal rectangles merged for better Illustrator performance while maintaining full editability)');
+                    console.log('💡 Generated block-optimized SVG (adjacent squares merged into larger rectangular blocks for better Illustrator performance while maintaining full editability)');
                 } else if (shouldUsePathOptimize) {
                     console.log('💡 Generated path-optimized SVG (all elements merged into single path for maximum compression)');
                 }
@@ -162,10 +162,10 @@ export class QRCodeGeneratorApp {
                 } else if (this.currentSVG.includes('<path')) {
                     console.log('💡 Downloaded path-optimized SVG! All elements merged into single path for maximum compression.');
                 } else {
-                    // Count rectangles to determine if row-optimized
+                    // Count rectangles to determine if block-optimized
                     const rectCount = (this.currentSVG.match(/<rect/g) || []).length;
                     if (rectCount > 2 && rectCount < 100) {
-                        console.log('💡 Downloaded row-optimized SVG! Adjacent horizontal rectangles merged for better Illustrator performance while maintaining full vector editability.');
+                        console.log('💡 Downloaded block-optimized SVG! Adjacent squares merged into larger rectangular blocks for better Illustrator performance while maintaining full vector editability.');
                     } else if (rectCount >= 100) {
                         console.log('💡 Downloaded standard SVG with individual elements - perfect for maximum editability.');
                     } else {

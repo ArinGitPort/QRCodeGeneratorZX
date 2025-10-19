@@ -92,7 +92,7 @@ export class QRGenerator {
             transparent = false,
             margin = 4,
             optimize = true,      // Path optimization (default)
-            rowOptimize = false,  // Row merging optimization (maintains full editability)
+            rowOptimize = false,  // Block merging optimization (maintains full editability)
             hybrid = false,       // PNG-in-SVG hybrid mode (ultra-lightweight)
             pngResolution = 1024  // High resolution for hybrid mode
         } = options;
@@ -118,23 +118,23 @@ export class QRGenerator {
         // Create basic SVG string
         const basicSVG = this.createSVGString(bitMatrix, cleanSize, foregroundColor, transparent ? 'transparent' : backgroundColor);
         
-        // Apply row optimization (merges adjacent horizontal rectangles)
+        // Apply block optimization (merges adjacent squares into larger blocks)
         if (rowOptimize) {
-            const rowOptimizedSVG = optimizeSVGRows(basicSVG);
+            const blockOptimizedSVG = optimizeSVGRows(basicSVG);
             
-            // Log row optimization stats
+            // Log block optimization stats
             if (console && console.log) {
-                const stats = getRowOptimizationStats(basicSVG, rowOptimizedSVG);
-                console.log('SVG Row Optimization Stats:', {
+                const stats = getRowOptimizationStats(basicSVG, blockOptimizedSVG);
+                console.log('SVG Block Optimization Stats:', {
                     'Original elements': stats.originalElements,
                     'Optimized elements': stats.optimizedElements,
                     'Elements reduced': stats.elementsReduced,
-                    'Merge efficiency': `${stats.mergeEfficiency}%`,
+                    'Block merge efficiency': `${stats.blockMergeEfficiency}%`,
                     'Size reduction': `${stats.reductionPercent}%`
                 });
             }
             
-            return rowOptimizedSVG;
+            return blockOptimizedSVG;
         }
         
         // Apply path optimization (merges all rectangles into single path)

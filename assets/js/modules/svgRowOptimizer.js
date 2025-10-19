@@ -1,13 +1,13 @@
 /**
- * SVG Row Optimizer Module
- * Optimizes QR code SVGs by merging adjacent horizontal black squares into single <rect> elements
- * This reduces element count while maintaining perfect visual fidelity and keeping full vector editability
+ * SVG Block Optimizer Module
+ * Optimizes QR code SVGs by merging adjacent black squares into larger square/rectangular blocks
+ * This dramatically reduces element count while maintaining perfect visual fidelity and full vector editability
  */
 
 /**
- * Optimizes SVG by merging adjacent horizontal black rectangles
+ * Optimizes SVG by merging adjacent black squares into larger blocks
  * @param {string} svgString - Original SVG string with individual rect elements
- * @returns {string} - Optimized SVG with merged horizontal rectangles
+ * @returns {string} - Optimized SVG with merged rectangular blocks
  */
 export function optimizeSVGRows(svgString) {
     try {
@@ -32,8 +32,8 @@ export function optimizeSVGRows(svgString) {
         const svgWidth = parseFloat(svgElement.getAttribute('width')) || 0;
         const svgHeight = parseFloat(svgElement.getAttribute('height')) || 0;
         
-        // Extract and merge rectangles
-        const { mergedRects, backgroundRect } = extractAndMergeRectangles(rects, svgWidth, svgHeight);
+        // Extract and merge rectangles into larger blocks
+        const { mergedRects, backgroundRect } = extractAndMergeBlocks(rects, svgWidth, svgHeight);
         
         // Create optimized SVG
         const optimizedSVG = createOptimizedRowSVG(svgElement, mergedRects, backgroundRect);
@@ -47,14 +47,14 @@ export function optimizeSVGRows(svgString) {
 }
 
 /**
- * Extracts rectangle data and merges adjacent horizontal rectangles
+ * Extracts rectangle data and merges adjacent squares into larger blocks
  * @private
  * @param {NodeList} rects - Collection of rect elements
  * @param {number} svgWidth - SVG width for validation
  * @param {number} svgHeight - SVG height for validation
- * @returns {Object} - Object with merged rectangles and background
+ * @returns {Object} - Object with merged blocks and background
  */
-function extractAndMergeRectangles(rects, svgWidth, svgHeight) {
+function extractAndMergeBlocks(rects, svgWidth, svgHeight) {
     const blackRects = [];
     let backgroundRect = null;
     
@@ -79,8 +79,8 @@ function extractAndMergeRectangles(rects, svgWidth, svgHeight) {
         return { mergedRects: [], backgroundRect };
     }
     
-    // Merge adjacent horizontal rectangles
-    const mergedRects = mergeHorizontalRectangles(blackRects);
+    // Merge adjacent squares into larger blocks (both horizontal and vertical)
+    const mergedRects = mergeIntoBlocks(blackRects);
     
     return { mergedRects, backgroundRect };
 }
@@ -119,103 +119,169 @@ function isRectValid(rectData, svgWidth, svgHeight) {
 }
 
 /**
- * Merges rectangles that are horizontally adjacent in the same row
+ * Merges adjacent squares into larger rectangular blocks
  * @private
  * @param {Array} rectangles - Array of rectangle data objects
- * @returns {Array} - Array of merged rectangle data objects
+ * @returns {Array} - Array of merged block data objects
  */
-function mergeHorizontalRectangles(rectangles) {
+function mergeIntoBlocks(rectangles) {
     if (rectangles.length === 0) {
         return [];
     }
     
-    // Group rectangles by row (same y coordinate and height)
-    const rowGroups = groupRectanglesByRow(rectangles);
+    // Create a 2D grid representation for efficient block detection
+    const grid = createGridFromRectangles(rectangles);
     
-    // Merge adjacent rectangles in each row
-    const mergedRects = [];
+    // Find and merge blocks using flood-fill algorithm
+    const mergedBlocks = findLargestBlocks(grid, rectangles);
     
-    for (const rowKey in rowGroups) {
-        const rowRects = rowGroups[rowKey];
-        const mergedRowRects = mergeAdjacentInRow(rowRects);
-        mergedRects.push(...mergedRowRects);
-    }
-    
-    return mergedRects;
+    return mergedBlocks;
 }
 
 /**
- * Groups rectangles by row (same y and height)
+ * Creates a 2D grid representation from rectangles for efficient block detection
  * @private
  * @param {Array} rectangles - Array of rectangle data
- * @returns {Object} - Object with row keys and rectangle arrays
+ * @returns {Object} - Grid object with coordinates and module size
  */
-function groupRectanglesByRow(rectangles) {
-    const groups = {};
+function createGridFromRectangles(rectangles) {
+    if (rectangles.length === 0) return { grid: {}, moduleSize: 1, minX: 0, minY: 0 };
+    
+    // Determine module size (assuming all rectangles are same size modules)
+    const firstRect = rectangles[0];
+    const moduleSize = Math.min(firstRect.width, firstRect.height);
+    
+    // Find grid bounds
+    let minX = Math.min(...rectangles.map(r => r.x));
+    let minY = Math.min(...rectangles.map(r => r.y));
+    
+    // Create grid coordinate system
+    const grid = {};
     
     for (const rect of rectangles) {
-        // Create row key from y coordinate and height (with tolerance for floating point)
-        const rowKey = `${Math.round(rect.y * 1000)}_${Math.round(rect.height * 1000)}`;
+        // Convert real coordinates to grid coordinates
+        const gridX = Math.round((rect.x - minX) / moduleSize);
+        const gridY = Math.round((rect.y - minY) / moduleSize);
+        const key = `${gridX},${gridY}`;
         
-        if (!groups[rowKey]) {
-            groups[rowKey] = [];
-        }
-        
-        groups[rowKey].push(rect);
+        grid[key] = {
+            gridX,
+            gridY,
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            fill: rect.fill,
+            used: false
+        };
     }
     
-    // Sort rectangles in each row by x coordinate for proper merging
-    for (const rowKey in groups) {
-        groups[rowKey].sort((a, b) => a.x - b.x);
-    }
-    
-    return groups;
+    return { grid, moduleSize, minX, minY };
 }
 
 /**
- * Merges adjacent rectangles in a single row
+ * Finds largest possible rectangular blocks using greedy algorithm
  * @private
- * @param {Array} rowRects - Array of rectangles in the same row, sorted by x
- * @returns {Array} - Array of merged rectangles
+ * @param {Object} gridData - Grid data from createGridFromRectangles
+ * @param {Array} originalRects - Original rectangles for fallback
+ * @returns {Array} - Array of merged block rectangles
  */
-function mergeAdjacentInRow(rowRects) {
-    if (rowRects.length === 0) {
-        return [];
-    }
+function findLargestBlocks(gridData, originalRects) {
+    const { grid, moduleSize, minX, minY } = gridData;
+    const blocks = [];
     
-    if (rowRects.length === 1) {
-        return [rowRects[0]];
-    }
+    // Get all grid positions sorted by position (top-left to bottom-right)
+    const positions = Object.keys(grid).sort((a, b) => {
+        const [x1, y1] = a.split(',').map(Number);
+        const [x2, y2] = b.split(',').map(Number);
+        if (y1 !== y2) return y1 - y2;
+        return x1 - x2;
+    });
     
-    const merged = [];
-    let currentRect = { ...rowRects[0] }; // Clone first rectangle
-    
-    for (let i = 1; i < rowRects.length; i++) {
-        const nextRect = rowRects[i];
+    for (const posKey of positions) {
+        const startCell = grid[posKey];
+        if (startCell.used) continue;
         
-        // Check if rectangles are adjacent (current rect's right edge meets next rect's left edge)
-        const tolerance = 0.001; // Small tolerance for floating point comparison
-        const currentRightEdge = currentRect.x + currentRect.width;
-        const isAdjacent = Math.abs(currentRightEdge - nextRect.x) <= tolerance;
+        // Try to find the largest rectangle starting from this position
+        const block = findLargestRectangleFrom(grid, startCell.gridX, startCell.gridY, moduleSize, minX, minY);
         
-        // Check if rectangles have same height and y position
-        const sameRow = Math.abs(currentRect.y - nextRect.y) <= tolerance && 
-                       Math.abs(currentRect.height - nextRect.height) <= tolerance;
-        
-        if (isAdjacent && sameRow) {
-            // Merge: extend current rectangle width to include next rectangle
-            currentRect.width = (nextRect.x + nextRect.width) - currentRect.x;
-        } else {
-            // Not adjacent: save current rectangle and start new one
-            merged.push(currentRect);
-            currentRect = { ...nextRect };
+        if (block) {
+            blocks.push(block);
         }
     }
     
-    // Don't forget the last rectangle
-    merged.push(currentRect);
+    return blocks.length > 0 ? blocks : originalRects; // Fallback to original if no blocks found
+}
+
+/**
+ * Finds the largest rectangle starting from a given grid position
+ * @private
+ * @param {Object} grid - Grid object
+ * @param {number} startX - Starting grid X coordinate
+ * @param {number} startY - Starting grid Y coordinate  
+ * @param {number} moduleSize - Size of each module
+ * @param {number} minX - Minimum X coordinate offset
+ * @param {number} minY - Minimum Y coordinate offset
+ * @returns {Object|null} - Rectangle block or null if already used
+ */
+function findLargestRectangleFrom(grid, startX, startY, moduleSize, minX, minY) {
+    const startKey = `${startX},${startY}`;
+    if (!grid[startKey] || grid[startKey].used) return null;
     
-    return merged;
+    // Find maximum width (how far right we can go)
+    let maxWidth = 0;
+    for (let x = startX; ; x++) {
+        const key = `${x},${startY}`;
+        if (!grid[key] || grid[key].used) break;
+        maxWidth++;
+    }
+    
+    // Find maximum height for the current width
+    let maxHeight = 0;
+    let finalWidth = maxWidth;
+    
+    for (let h = 1; ; h++) {
+        // Check if we can extend the rectangle by one row
+        let canExtendHeight = true;
+        let currentRowWidth = 0;
+        
+        for (let x = startX; x < startX + finalWidth; x++) {
+            const key = `${x},${startY + h - 1}`;
+            if (!grid[key] || grid[key].used) {
+                canExtendHeight = false;
+                break;
+            }
+            currentRowWidth++;
+        }
+        
+        if (!canExtendHeight) break;
+        
+        maxHeight = h;
+        // Adjust width to maintain rectangle shape - take minimum width of all rows
+        finalWidth = Math.min(finalWidth, currentRowWidth);
+    }
+    
+    // If we found a valid rectangle, mark cells as used and create block
+    if (maxHeight > 0 && finalWidth > 0) {
+        for (let y = startY; y < startY + maxHeight; y++) {
+            for (let x = startX; x < startX + finalWidth; x++) {
+                const key = `${x},${y}`;
+                if (grid[key]) {
+                    grid[key].used = true;
+                }
+            }
+        }
+        
+        return {
+            x: minX + startX * moduleSize,
+            y: minY + startY * moduleSize,
+            width: finalWidth * moduleSize,
+            height: maxHeight * moduleSize,
+            fill: grid[startKey].fill
+        };
+    }
+    
+    return null;
 }
 
 /**
@@ -349,9 +415,9 @@ function isBackgroundColor(color) {
 }
 
 /**
- * Gets row optimization statistics
+ * Gets block optimization statistics
  * @param {string} originalSvg - Original SVG string
- * @param {string} optimizedSvg - Row-optimized SVG string
+ * @param {string} optimizedSvg - Block-optimized SVG string
  * @returns {Object} - Statistics object with optimization info
  */
 export function getRowOptimizationStats(originalSvg, optimizedSvg) {
@@ -368,9 +434,9 @@ export function getRowOptimizationStats(originalSvg, optimizedSvg) {
     const originalRects = originalDoc.querySelectorAll('rect').length;
     const optimizedRects = optimizedDoc.querySelectorAll('rect').length;
     
-    // Calculate merge efficiency
+    // Calculate block merge efficiency
     const elementsReduced = originalRects - optimizedRects;
-    const mergeEfficiency = originalRects > 0 ? ((elementsReduced / originalRects) * 100).toFixed(1) : '0.0';
+    const blockMergeEfficiency = originalRects > 0 ? ((elementsReduced / originalRects) * 100).toFixed(1) : '0.0';
     
     return {
         originalSize,
@@ -380,14 +446,15 @@ export function getRowOptimizationStats(originalSvg, optimizedSvg) {
         originalElements: originalRects,
         optimizedElements: optimizedRects,
         elementsReduced,
-        mergeEfficiency: parseFloat(mergeEfficiency)
+        mergeEfficiency: parseFloat(blockMergeEfficiency),
+        blockMergeEfficiency: parseFloat(blockMergeEfficiency) // More descriptive name
     };
 }
 
 /**
- * Validates that row-optimized SVG maintains visual fidelity
+ * Validates that block-optimized SVG maintains visual fidelity
  * @param {string} originalSvg - Original SVG string
- * @param {string} optimizedSvg - Row-optimized SVG string
+ * @param {string} optimizedSvg - Block-optimized SVG string
  * @returns {boolean} - True if optimization maintains visual fidelity
  */
 export function validateRowOptimization(originalSvg, optimizedSvg) {
@@ -418,13 +485,16 @@ export function validateRowOptimization(originalSvg, optimizedSvg) {
         const originalRects = originalDoc.querySelectorAll('rect[fill="#000000"], rect[fill="black"]');
         const optimizedRects = optimizedDoc.querySelectorAll('rect[fill="#000000"], rect[fill="black"]');
         
-        // Should have fewer rectangles in optimized version
+        // Should have significantly fewer rectangles in block-optimized version
         const hasFewerElements = optimizedRects.length < originalRects.length;
         
         // Should still have black rectangles if original had them
         const hasBlackRects = originalRects.length === 0 || optimizedRects.length > 0;
         
-        return hasFewerElements && hasBlackRects;
+        // Block optimization should achieve better reduction than simple row merging
+        const significantReduction = optimizedRects.length <= originalRects.length * 0.7; // At least 30% reduction
+        
+        return hasFewerElements && hasBlackRects && significantReduction;
         
     } catch (error) {
         console.warn('Row optimization validation failed:', error.message);
@@ -433,7 +503,7 @@ export function validateRowOptimization(originalSvg, optimizedSvg) {
 }
 
 /**
- * Utility function to download row-optimized SVG
+ * Utility function to download block-optimized SVG
  * @param {string} svgContent - SVG content
  * @param {string} filename - Filename without extension
  */
@@ -441,7 +511,7 @@ export function downloadRowOptimizedSVG(svgContent, filename) {
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = `${filename}-row-optimized.svg`;
+    link.download = `${filename}-block-optimized.svg`;
     link.href = url;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 100);
@@ -454,19 +524,19 @@ export function downloadRowOptimizedSVG(svgContent, filename) {
  */
 export function compareOptimizationMethods(originalSvg) {
     try {
-        // Row optimization
-        const rowOptimized = optimizeSVGRows(originalSvg);
-        const rowStats = getRowOptimizationStats(originalSvg, rowOptimized);
+        // Block optimization
+        const blockOptimized = optimizeSVGRows(originalSvg);
+        const blockStats = getRowOptimizationStats(originalSvg, blockOptimized);
         
         return {
             original: {
                 size: new Blob([originalSvg]).size,
                 elements: (originalSvg.match(/<rect/g) || []).length
             },
-            rowOptimized: {
-                svg: rowOptimized,
-                stats: rowStats,
-                description: 'Horizontal rectangle merging - maintains full vector editability'
+            blockOptimized: {
+                svg: blockOptimized,
+                stats: blockStats,
+                description: 'Smart rectangular block merging - maintains full vector editability with maximum element reduction'
             }
         };
         
